@@ -2,6 +2,25 @@
 
 This project template walks you through the professional novel writing process using Brandon Sanderson's methods, including worldbuilding, character arcs, plotting, drafting, and revision.
 
+## System Requirements
+
+- [Python 3](https://www.python.org/downloads/)
+- [Git](https://git-scm.com/downloads)
+
+
+## Usage
+
+- Windows
+  - Open root directory of project with Git Bash
+  - Run `./run.sh` to install requirements, set your titles, and start the server
+- Linux
+  - Open root directory of project in the terminal
+  - Run `./run.sh` to install requirements, set your titles, and start the server
+- Mac
+  - Open root directory of project in the terminal
+  - Run `./run.sh` to install requirements, set your titles, and start the server
+
+
 ## Main Steps
 
 ### 1. [Getting Started](plan/00-Getting-Started.md)
@@ -27,42 +46,3 @@ Use after finishing the first draft. Work through structural, line, and proofrea
 
 ### 8. [Publishing Strategy](plan/07-Publishing-Plan.md)
 Use after final revisions. Decide between traditional and indie publishing. Checklist includes query letters, editors, platform setup, and launch prep.
-
-Each file includes checklists, examples, and worksheets to guide you through each stage of novel development.
-
----
-
-## Process Flowchart (Text Format)
-
-```
-Start
-  |
-  v
-[01] Getting Started  ---> Clarify motivation, mindset, and writing habit
-  |
-  v
-[02] Idea Development ---> Brainstorm and combine core story ideas
-  |
-  v
-[03] Worldbuilding    ---> Build rules, cultures, systems, and geography
-  |
-  v
-[04] Character Creation ---> Develop characters, arcs, and relationships
-  |
-  v
-[05] Plotting         ---> Choose structure and outline story beats
-  |
-  v
-[06] First Draft      ---> Write full manuscript, track scenes
-  |
-  v
-[07] Revision Process ---> Edit in passes, gather beta feedback
-  |
-  v
-[08] Publishing Plan  ---> Choose path, prepare materials, launch
-  |
-  v
- Success!
-```
-
-Use this chart as a quick reference for where you are and what comes next.
