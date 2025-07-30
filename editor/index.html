@@ -5,7 +5,7 @@
         <title>Sanderson Novel Template Editor</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <script>
-        tailwind.config = { 
+        tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
@@ -52,6 +52,24 @@
         .toastui-editor-dark .toastui-editor-contents h4,
         .toastui-editor-dark .toastui-editor-contents h5,
         .toastui-editor-dark .toastui-editor-contents h6 { color: #f7fafc !important; }
+
+        /* Git Sidebar Fullscreen Mode */
+        body.git-fullscreen-active #git-sidebar {
+            width: 100% !important;
+            transform: translateX(0) !important;
+            position: fixed; /* Override xl:relative */
+            top: 0;
+            right: 0;
+            height: 100vh;
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+            z-index: 100; /* Make sure it's on top of everything */
+        }
+        body.git-fullscreen-active #main-content,
+        body.git-fullscreen-active #files-sidebar,
+        body.git-fullscreen-active > header {
+            display: none !important;
+        }
         </style>
     </head>
     <body class="bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100 flex flex-col h-screen overflow-hidden">
@@ -67,7 +85,7 @@
                 </div>
             </div>
             <div class="flex items-center gap-3">
-                <button id="fullscreen-btn" class="px-3 py-1 bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-600 text-sm">Fullscreen</button>
+                <button id="fullscreen-toggle-btn" class="px-3 py-1 bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-600 text-sm">Enter Fullscreen</button>
                 <button id="theme-toggle-btn" class="px-3 py-1 bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-600 text-sm">Toggle Theme</button>
                 <button id="toggle-git-btn" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Toggle Git Controls">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
@@ -112,7 +130,13 @@
             </main>
 
             <aside id="git-sidebar" class="fixed top-0 right-0 h-screen w-full pt-16 xl:pt-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm xl:w-80 xl:relative xl:bg-white xl:dark:bg-gray-800 xl:backdrop-blur-none border-l border-gray-200 dark:border-gray-700 flex-col p-4 space-y-4 transform transition-transform duration-300 ease-in-out z-40 flex translate-x-full">
-                <h3 class="text-lg font-semibold mt-2">Version Control</h3>
+                <div class="flex justify-between items-center mt-2">
+                    <h3 class="text-lg font-semibold">Version Control</h3>
+                    <button id="toggle-git-fullscreen-btn" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 hidden xl:block" title="Toggle Fullscreen Diff View">
+                        <svg id="maximize-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1v4m0 0h-4m4 0l-5-5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5-5" /></svg>
+                        <svg id="minimize-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l-5 5m0 0v-4m0 4h4m11-9l-5 5m0 0h-4m4 0v4M5 9l5-5m0 0v4m0-4h4m5 11l-5-5m0 0h4m-4 0v-4" /></svg>
+                    </button>
+                </div>
                 <div class="grid grid-cols-2 gap-2">
                     <button id="git-status-btn" class="px-3 py-1 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 rounded">Status</button>
                     <button id="git-log-btn" class="px-3 py-1 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 rounded">Log</button>
@@ -171,6 +195,11 @@
 
             document.addEventListener('keydown', (event) => {
                 if (event.key === 'Escape') {
+                    if (document.body.classList.contains('git-fullscreen-active')) {
+                        document.body.classList.remove('git-fullscreen-active');
+                        document.getElementById('maximize-icon').classList.remove('hidden');
+                        document.getElementById('minimize-icon').classList.add('hidden');
+                    }
                     if (!filesSidebar.classList.contains('-translate-x-full')) {
                         filesSidebar.classList.add('-translate-x-full');
                     }
@@ -201,15 +230,6 @@
                 editor = new Editor({
                     el: document.getElementById('editor'), initialEditType: 'wysiwyg', previewStyle: 'vertical', height: defaultHeight, initialValue: content, theme: mode
                 });
-            });
-
-            document.getElementById('fullscreen-btn').addEventListener('click', () => {
-                if (!document.fullscreenElement) {
-                    document.querySelector('body').requestFullscreen();
-                } else { document.exitFullscreen(); }
-            });
-            document.addEventListener('fullscreenchange', () => {
-                editor.setHeight(document.fullscreenElement ? '100vh' : defaultHeight);
             });
 
             async function loadTabs() {
@@ -301,9 +321,9 @@
             });
             document.getElementById('delete-btn').addEventListener('click', async () => {
                 if (!currentFile) return alert('No file selected to delete.');
-                if (confirm(`Are you sure you want to permanently delete ${currentFile}?`)) { 
-                    await fetch(`/files/${currentDir}/${currentFile}`, { method: 'DELETE' }); 
-                    await loadTabs(); 
+                if (confirm(`Are you sure you want to permanently delete ${currentFile}?`)) {
+                    await fetch(`/files/${currentDir}/${currentFile}`, { method: 'DELETE' });
+                    await loadTabs();
                 }
             });
 
@@ -337,6 +357,40 @@
             });
             document.getElementById('push-btn').addEventListener('click', async () => { await fetch('/git/push', { method: 'POST' }); showOutput('🚀 Pushed to remote.'); });
             document.getElementById('pull-btn').addEventListener('click', async () => { await fetch('/git/pull', { method: 'POST' }); showOutput('📥 Pulled from remote.'); });
+
+            // Fullscreen stuff
+            const fullscreenToggleBtn = document.getElementById('fullscreen-toggle-btn');
+            function toggleFullScreen() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+            function updateButtonText() {
+                const isFullscreen = !!document.fullscreenElement;
+                fullscreenToggleBtn.textContent = isFullscreen
+                    ? 'Exit Fullscreen'
+                    : 'Enter Fullscreen';
+            }
+            fullscreenToggleBtn.addEventListener('click', () => {
+                toggleFullScreen();
+            });
+            document.addEventListener('fullscreenchange', updateButtonText);
+            updateButtonText(); //Check which text to display on load based on current fullscreen status
+
+            // Git Sidebar Fullscreen Toggle
+            const toggleGitFullscreenBtn = document.getElementById('toggle-git-fullscreen-btn');
+            const maximizeIcon = document.getElementById('maximize-icon');
+            const minimizeIcon = document.getElementById('minimize-icon');
+
+            if (toggleGitFullscreenBtn) {
+                toggleGitFullscreenBtn.addEventListener('click', () => {
+                    document.body.classList.toggle('git-fullscreen-active');
+                    maximizeIcon.classList.toggle('hidden');
+                    minimizeIcon.classList.toggle('hidden');
+                });
+            }
 
             function showOutput(text, isHtml = false, suppressAutoOpen = false) {
                 const outputContent = document.getElementById('git-output-content');
