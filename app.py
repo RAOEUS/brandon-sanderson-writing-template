@@ -64,6 +64,8 @@ def save_file(section: str, filename: str, data: FileUpdate):
 
 from textwrap import dedent
 
+from textwrap import dedent
+
 @app.post("/files/{section}/{filename}")
 def create_file(section: str, filename: str):
     """
@@ -102,19 +104,23 @@ def create_file(section: str, filename: str):
             - **Who appears here:**  
             - **Each character’s objective in this chapter:**  
 
-            ### 4. Scene Breakdown
+            ### 4. Point(s) of View
+            - **POV character(s):**  
+            - **Narrative perspective (e.g., first-person, third-person limited):**  
+
+            ### 5. Scene Breakdown
             - [ ] Scene 1: _what happens_  
             - [ ] Scene 2: _what happens_  
             - [ ] …  
 
-            ### 5. Conflict & Stakes
+            ### 6. Conflict & Stakes
             - **Immediate conflict:**  
             - **What’s at risk for the POV character(s):**  
 
-            ### 6. Chapter-Specific Hooks
+            ### 7. Chapter-Specific Hooks
             - **Cliffhanger or question to carry forward:**  
 
-            ### 7. Notes / To-Do
+            ### 8. Notes / To-Do
             - **Continuity checks (dates, names, previous events):** 
             - **Research or worldbuilding details needed:**  
 
@@ -129,7 +135,6 @@ def create_file(section: str, filename: str):
     except Exception as e:
         logger.error(f"Error creating file {filename} in {section}: {e}")
         return JSONResponse(status_code=500, content={"error": "Internal Server Error"})
-
 
 @app.delete("/files/{section}/{filename}")
 def delete_file(section: str, filename: str):
