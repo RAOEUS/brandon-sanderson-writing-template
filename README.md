@@ -12,7 +12,7 @@ A guided project template that walks you through the professional novel writing 
 4. [Using the Web Editor](#using-the-web-editor)
    * [File Management](#file-management)
    * [Git Integration](#git-integration)
-   * [Branching Locally](#branching-locally-(command%E2%80%91line))
+   * [Branching Locally](#branching-locally-commandline)
 5. [Main Steps](#main-steps)
 6. [Why Use Git](#why-use-git)
 7. [Collaboration Workflow](#collaboration-workflow)
