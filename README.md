@@ -1,6 +1,6 @@
 # Brandon Sanderson-Inspired Novel Writing Template
 
-A guided project template that walks you through the professional novel writing process using Brandon Sanderson’s methods—and provides a built-in web GUI to manage your planning files (`plan/`) and your chapters (`chapters/`) with a WYSIWYG Markdown editor and Git integration.
+A guided project template that walks you through the professional novel writing process using Brandon Sanderson’s methods—and provides a built-in web GUI to manage your planning files (`plan/`) and your chapters (`chapters/`) with a what-you-see-is-what-you-get (WYSIWYG) Markdown editor and Git integration.
 
 ---
 
