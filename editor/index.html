@@ -1,137 +1,254 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Sanderson Novel Template Editor</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css">
-</head>
-<body class="bg-gray-100 text-gray-900">
-  <div class="max-w-5xl mx-auto p-6">
-    <h1 class="text-3xl font-bold mb-4">Sanderson Novel Template Editor</h1>
-
-    <div class="flex flex-wrap justify-between items-center mb-4">
-      <div id="tabs" class="flex flex-wrap gap-2 text-sm"></div>
-      <div class="flex gap-2">
-        <button id="git-status-btn" class="px-3 py-1 bg-gray-300 hover:bg-gray-400 rounded">Git Status</button>
-        <button id="git-log-btn" class="px-3 py-1 bg-gray-300 hover:bg-gray-400 rounded">Git Log</button>
-      </div>
-    </div>
-
-    <div id="editor" class="bg-white rounded shadow mb-4"></div>
-
-    <div class="flex flex-col md:flex-row items-start md:items-center gap-2 mb-4">
-      <input id="commit-msg" class="flex-1 px-3 py-2 border rounded w-full md:w-auto" type="text" placeholder="Commit message">
-      <button id="commit-btn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Commit</button>
-      <button id="push-btn" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Push</button>
-      <button id="pull-btn" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">Pull</button>
-      <button id="save-btn" class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-black">Save</button>
-    </div>
-
-    <div id="git-output" class="bg-white rounded shadow p-4 text-sm whitespace-pre-wrap hidden"></div>
-  </div>
-
-  <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
-  <script>
-    let currentFile = "";
-    const editor = new toastui.Editor({
-      el: document.querySelector('#editor'),
-      height: '600px',
-      initialEditType: 'wysiwyg',
-      previewStyle: 'vertical'
-    });
-
-    async function loadFiles() {
-      const res = await fetch("/files");
-      let files = await res.json();
-      files = files.sort();
-      const tabsContainer = document.getElementById("tabs");
-      tabsContainer.innerHTML = "";
-
-      files.forEach((filename, idx) => {
-        const tab = document.createElement("button");
-        tab.className = "tab bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded border border-gray-400";
-        tab.innerText = filename.replace(".md", "");
-        tab.onclick = () => {
-          document.querySelectorAll(".tab").forEach(t => t.classList.remove("bg-blue-500", "text-white"));
-          tab.classList.add("bg-blue-500", "text-white");
-          loadFileContent(filename);
-          currentFile = filename;
-        };
-        if (idx === 0) {
-          tab.classList.add("bg-blue-500", "text-white");
-          currentFile = filename;
-          loadFileContent(filename);
+<html lang="en" class="">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Sanderson Novel Template Editor</title>
+        <!-- Tailwind CDN with class-based dark mode -->
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>tailwind.config = { darkMode: 'class' };</script>
+        <!-- Toast UI Editor CSS -->
+        <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
+        <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/theme/toastui-editor-dark.min.css" />
+        <style>
+        /* Override Toast UI Editor dark theme to match Tailwind dark colors */
+        .toastui-editor-dark .toastui-editor-defaultUI,
+        .toastui-editor-dark .toastui-editor-contents,
+        .toastui-editor-dark .toastui-editor-md-container,
+        .toastui-editor-dark .toastui-editor-mode-switch,
+        .toastui-editor-dark .toastui-editor-mode-switch .tab-item,
+        .toastui-editor-dark .toastui-editor-toolbar button,
+        .toastui-editor-dark .ProseMirror {
+            /* Tailwind gray-900 */
+            background-color: #1a202c;
+            /* Tailwind gray-100 */
+            color: #f7fafc;
         }
-        tabsContainer.appendChild(tab);
-      });
-    }
+        .toastui-editor-dark .toastui-editor-toolbar,
+        .toastui-editor-dark .toastui-editor-defaultUI-toolbar,
+        .toastui-editor-dark .toastui-editor-dropdown-toolbar,
+        .toastui-editor-dark .toastui-editor-mode-switch .tab-item.active {
+            /* Tailwind gray-800 */
+            background-color: #2d3748;
+            /* Tailwind gray-100 */
+            color: #f7fafc;
+        }
+        .toastui-editor-dark .toastui-editor-toolbar-icons:not(:disabled):hover{
+            background-color: #2d3748;
+            border: solid 1px #f7fafc;
+        }
+        .toastui-editor-dark .toastui-editor-separator {
+            /* Tailwind gray-700 */
+            border-color: #4a5568;
+        }
+        .toastui-editor-dark .toastui-editor-contents h1,
+        .toastui-editor-dark .toastui-editor-contents h2,
+        .toastui-editor-dark .toastui-editor-contents h3,
+        .toastui-editor-dark .toastui-editor-contents h4,
+        .toastui-editor-dark .toastui-editor-contents h5,
+        .toastui-editor-dark .toastui-editor-contents h6 {
+            /* Tailwind gray-100 */
+            color: #f7fafc;
+        }
+        </style>
+    </head>
+    <body class="bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
+        <div class="max-w-5xl mx-auto p-6">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h1 class="text-3xl font-bold">Sanderson Template Editor</h1>
+                    <h2 class="text-xl text-gray-600 dark:text-gray-400">by Your Name</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="theme-toggle-btn" class="px-3 py-1 bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-600">Toggle Theme</button>
+                    <button id="fullscreen-btn" class="px-3 py-1 bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-600">Fullscreen Edit</button>
+                </div>
+            </div>
 
-    async function loadFileContent(filename) {
-      const res = await fetch(`/files/${filename}`);
-      const text = await res.text();
-      editor.setMarkdown(text);
-    }
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label for="plan-selector" class="block text-lg font-medium mb-2">Plan Files:</label>
+                    <select id="plan-selector" class="w-full p-2 border rounded bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100">
+                        <option value="" disabled selected>Select a plan…</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="chapter-selector" class="block text-lg font-medium mb-2">Chapter Files:</label>
+                    <select id="chapter-selector" class="w-full p-2 border rounded bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100">
+                        <option value="" disabled selected>Select a chapter…</option>
+                    </select>
+                </div>
+            </div>
 
-    document.getElementById("save-btn").onclick = async () => {
-      if (!currentFile) return alert("No file selected.");
-      const content = editor.getMarkdown();
-      const res = await fetch(`/files/${currentFile}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content })
-      });
-      if (res.ok) {
-        alert("Saved successfully!");
-      } else {
-        alert("Failed to save.");
-      }
-    };
+            <div class="mb-4 flex gap-2">
+                <button id="create-plan-btn" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">+ New Plan File</button>
+                <button id="create-chapter-btn" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">+ New Chapter</button>
+                <button id="stageAll-btn" class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">Stage All</button>
+            </div>
 
-    document.getElementById("commit-btn").onclick = async () => {
-      const msg = document.getElementById("commit-msg").value.trim();
-      if (!msg) return alert("Please enter a commit message.");
-      const res = await fetch("/git/commit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(msg)
-      });
-      const out = await res.json();
-      showOutput("✅ Commit: " + out.message);
-    };
+            <h3 id="file-header" class="text-xl font-semibold mb-4 hidden"></h3>
+            <div id="editor-container" class="hidden">
+                <div id="editor" class="bg-white dark:bg-gray-800 rounded shadow mb-4"></div>
+            </div>
 
-    document.getElementById("push-btn").onclick = async () => {
-      const res = await fetch("/git/push", { method: "POST" });
-      const out = await res.json();
-      showOutput("⬆️ Push: " + out.status);
-    };
+            <div class="flex flex-wrap gap-2 my-4">
+                <button id="git-status-btn" class="px-3 py-1 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 rounded">Git Status</button>
+                <button id="git-log-btn" class="px-3 py-1 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 rounded">Git Log</button>
+                <button id="git-diff-btn" class="px-3 py-1 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 rounded">Git Diff</button>
+                <button id="commit-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">Commit</button>
+                <button id="push-btn" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded">Push</button>
+                <button id="pull-btn" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded">Pull</button>
+                <button id="save-btn" class="px-4 py-2 bg-gray-700 dark:bg-gray-600 hover:bg-black dark:hover:bg-gray-800 text-white rounded">Save</button>
+                <button id="delete-btn" class="px-4 py-2 bg-red-700 hover:bg-red-800 text-white rounded">Delete</button>
+            </div>
 
-    document.getElementById("pull-btn").onclick = async () => {
-      const res = await fetch("/git/pull", { method: "POST" });
-      const out = await res.json();
-      showOutput("🔄 Pull: " + out.status);
-    };
+            <textarea id="commit-msg" class="px-3 py-2 border rounded w-full mb-4 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100" placeholder="Commit message"></textarea>
 
-    document.getElementById("git-status-btn").onclick = async () => {
-      const res = await fetch("/git/status");
-      const out = await res.json();
-      showOutput("📝 Git Status:\nChanged: " + out.changed.join(", ") + "\nUntracked: " + out.untracked.join(", "));
-    };
+            <div id="git-output" class="bg-white dark:bg-gray-800 rounded shadow p-4 text-sm hidden">
+                <h2 class="text-lg font-semibold mb-2">Git Output</h2>
+                <div id="git-output-content" class="whitespace-pre-wrap font-mono text-sm"></div>
+            </div>
+        </div>
 
-    document.getElementById("git-log-btn").onclick = async () => {
-      const res = await fetch("/git/log");
-      const out = await res.json();
-      const log = out.map(c => `• ${c.hexsha}: ${c.message}`).join("\n");
-      showOutput("📜 Git Log:\n" + log);
-    };
+        <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+        <script>
+        // Helpers for cookies and fullscreen
+        function setCookie(name, value, days = 365) {
+            const expires = new Date(Date.now() + days * 864e5).toUTCString();
+            document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
+        }
+        function getCookie(name) {
+            return document.cookie.split('; ').reduce((r, v) => {
+                const [k, val] = v.split('='); return k === name ? decodeURIComponent(val) : r;
+            }, '');
+        }
+        function toggleFullscreen() {
+            const wrapper = document.getElementById('editor-container');
+            if (!document.fullscreenElement) {
+                wrapper.requestFullscreen().catch(console.error);
+            } else {
+                document.exitFullscreen();
+            }
+        }
 
-    function showOutput(msg) {
-      const box = document.getElementById("git-output");
-      box.textContent = msg;
-      box.classList.remove("hidden");
-    }
+        document.addEventListener('DOMContentLoaded', () => {
+            const htmlEl = document.documentElement;
+            const themeBtn = document.getElementById('theme-toggle-btn');
+            let mode = getCookie('theme') || 'light';
+            htmlEl.classList.toggle('dark', mode === 'dark');
+            htmlEl.classList.toggle('toastui-editor-dark', mode === 'dark');
+            themeBtn.textContent = mode === 'dark' ? 'Light Mode' : 'Dark Mode';
 
-    loadFiles();
-  </script>
-</body>
+            // Editor setup
+            const { Editor } = toastui;
+            let editor = new Editor({
+                el: document.querySelector('#editor'),
+                previewStyle: 'vertical',
+                height: '600px',
+                initialValue: '',
+                theme: mode
+            });
+
+            // Toggle theme on the fly (recreate editor)
+            themeBtn.addEventListener('click', () => {
+                mode = htmlEl.classList.toggle('dark') ? 'dark' : 'light';
+                htmlEl.classList.toggle('toastui-editor-dark', mode === 'dark');
+                setCookie('theme', mode);
+                themeBtn.textContent = mode === 'dark' ? 'Light Mode' : 'Dark Mode';
+                // Recreate editor to apply new theme
+                const content = editor.getMarkdown();
+                editor.destroy();
+                editor = new Editor({
+                    el: document.querySelector('#editor'),
+                    previewStyle: 'vertical',
+                    height: document.fullscreenElement ? '100vh' : '600px',
+                    initialValue: content,
+                    theme: mode
+                });
+            });
+            document.getElementById('fullscreen-btn').addEventListener('click', () => {
+                toggleFullscreen();
+                // adjust height after fullscreen change
+                setTimeout(() => {
+                    editor.setHeight(document.fullscreenElement ? '100vh' : '600px');
+                }, 300);
+            });
+
+            let currentDir = '', currentFile = '';
+            const planSel = document.getElementById('plan-selector');
+            const chapSel = document.getElementById('chapter-selector');
+            const fileHeader = document.getElementById('file-header');
+            const editorCont = document.getElementById('editor-container');
+
+            async function loadTabs() {
+                try {
+                    const res = await fetch('/files');
+                    const { plan, chapters } = await res.json();
+                    planSel.innerHTML = '<option value="" disabled selected>Select a plan…</option>';
+                    chapSel.innerHTML = '<option value="" disabled selected>Select a chapter…</option>';
+                    plan.forEach(f => { const o = document.createElement('option'); o.value = f; o.textContent = f.replace('.md',''); planSel.append(o); });
+                    chapters.forEach(f => { const o = document.createElement('option'); o.value = f; o.textContent = f.replace('.md',''); chapSel.append(o); });
+                    fileHeader.classList.add('hidden'); editorCont.classList.add('hidden');
+                } catch(e){ console.error(e);}      }
+
+            async function loadFileContent(dir, file) {
+                currentDir = dir; currentFile = file;
+                fileHeader.textContent = file; fileHeader.classList.remove('hidden');
+                editorCont.classList.remove('hidden');
+                const txt = await (await fetch(`/files/${dir}/${file}`)).text();
+                editor.setMarkdown(txt);
+            }
+
+            planSel.addEventListener('change', e => loadFileContent('plan', e.target.value));
+            chapSel.addEventListener('change', e => loadFileContent('chapters', e.target.value));
+
+            document.getElementById('create-plan-btn').addEventListener('click', () => createFile('plan'));
+            document.getElementById('create-chapter-btn').addEventListener('click', () => createFile('chapters'));
+            async function createFile(sec) {
+                const name = prompt('Filename without .md:'); if(!name)return;
+                const r = await fetch(`/files/${sec}/${name}.md`,{method:'POST'});
+                if(r.ok){ await loadTabs(); showOutput(`✅ Created ${name}.md`);} else { const j=await r.json(); showOutput(`❌ ${j.error}`);}      }
+
+            document.getElementById('stageAll-btn').addEventListener('click', async()=>{ await fetch('/git/add',{method:'POST'}); showOutput('✅ Staged all');});
+            document.getElementById('save-btn').addEventListener('click', async()=>{
+                if(!currentFile)return alert('Select a file');
+                const c=editor.getMarkdown();
+                await fetch(`/files/${currentDir}/${currentFile}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:c})});
+                alert('Saved');
+            });
+            document.getElementById('delete-btn').addEventListener('click', async()=>{
+                if(!currentFile)return alert('Select a file'); if(confirm(`Delete ${currentFile}?`)){ await fetch(`/files/${currentDir}/${currentFile}`,{method:'DELETE'}); await loadTabs(); }
+            });
+
+            document.getElementById('git-status-btn').addEventListener('click', async()=>{
+                const {changed,untracked}=await (await fetch('/git/status')).json(); showOutput(`Changed: ${changed.join(', ')}\nUntracked: ${untracked.join(', ')}`);
+            });
+            document.getElementById('git-log-btn').addEventListener('click', async()=>{
+                const logs=await (await fetch('/git/log')).json(); showOutput(logs.map(c=>`• ${c.hexsha}: ${c.message}`).join('\n'));
+            });
+            document.getElementById('git-diff-btn').addEventListener('click', async()=>{
+                const {diff}=await (await fetch('/git/diff')).json();
+                const html = diff.split('\n').map(l=>{
+                    const e=l.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                    if(l.startsWith('+')&&!l.startsWith('+++')) return `<div class=\"bg-green-100 dark:bg-gray-800 text-green-800 dark:text-green-400 font-mono whitespace-pre-wrap\">${e}</div>`;
+                    if(l.startsWith('-')&&!l.startsWith('---')) return `<div class=\"bg-red-100 dark:bg-gray-800 text-red-800 dark:text-red-400 font-mono whitespace-pre-wrap\">${e}</div>`;
+                    return `<div class=\"font-mono whitespace-pre-wrap\">${e}</div>`;
+                }).join('');
+                document.getElementById('git-output-content').innerHTML=html;
+                document.getElementById('git-output').classList.remove('hidden');
+            });
+
+            document.getElementById('commit-btn').addEventListener('click', async()=>{
+                const m=document.getElementById('commit-msg').value.trim(); if(!m)return alert('Enter commit msg');
+                const d=await (await fetch('/git/commit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(m)})).json(); showOutput(`Committed: ${d.message}`);
+            });
+            document.getElementById('push-btn').addEventListener('click', async()=>{ await fetch('/git/push',{method:'POST'}); showOutput('Pushed'); });
+            document.getElementById('pull-btn').addEventListener('click', async()=>{ await fetch('/git/pull',{method:'POST'}); showOutput('Pulled'); });
+
+            function showOutput(t){ const b=document.getElementById('git-output'); document.getElementById('git-output-content').textContent=t; b.classList.remove('hidden'); }
+
+            loadTabs();
+        });
+        </script>
+    </body>
 </html>
+
