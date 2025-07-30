@@ -3,118 +3,139 @@
     <head>
         <meta charset="UTF-8" />
         <title>Sanderson Novel Template Editor</title>
-        <!-- Tailwind CDN with class-based dark mode -->
         <script src="https://cdn.tailwindcss.com"></script>
-        <script>tailwind.config = { darkMode: 'class' };</script>
-        <!-- Toast UI Editor CSS -->
+        <script>
+        tailwind.config = { 
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    screens: {
+                        'xl': '1280px',
+                    },
+                },
+            },
+        };
+        </script>
         <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
         <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/theme/toastui-editor-dark.min.css" />
         <style>
-        /* Toast UI dark theme overrides */
+        /* Custom scrollbar for webkit browsers */
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #4a5568; border-radius: 20px; border: 3px solid transparent; }
+        /* Toast UI Dark Theme Overrides */
         .toastui-editor-dark .toastui-editor-defaultUI,
         .toastui-editor-dark .toastui-editor-contents,
         .toastui-editor-dark .toastui-editor-md-container,
         .toastui-editor-dark .toastui-editor-mode-switch,
-        .toastui-editor-dark .toastui-editor-mode-switch .tab-item,
+        .toastui-editor-dark .toastui-editor-mode-switch .tab-item.active,
         .toastui-editor-dark .toastui-editor-toolbar button,
         .toastui-editor-dark .ProseMirror {
-            background-color: #1a202c;
-            color: #f7fafc;
+            background-color: #1a202c !important;
+            color: #f7fafc !important;
         }
         .toastui-editor-dark .toastui-editor-toolbar,
         .toastui-editor-dark .toastui-editor-defaultUI-toolbar,
         .toastui-editor-dark .toastui-editor-dropdown-toolbar,
-        .toastui-editor-dark .toastui-editor-mode-switch .tab-item.active,
+        .toastui-editor-dark .toastui-editor-mode-switch .tab-item,
         .toastui-editor-dark .toastui-editor-toolbar button:hover {
-            background-color: #2d3748;
-            color: #f7fafc;
+            background-color: #2d3748 !important;
+            color: #f7fafc !important;
         }
-        .toastui-editor-dark .toastui-editor-separator {
-            border-color: #4a5568;
+        .toastui-editor-dark .toastui-editor-mode-switch .tab-item.active {
+            border-top-color: #1a202c;
         }
+        .toastui-editor-dark .toastui-editor-separator { border-color: #4a5568 !important; }
         .toastui-editor-dark .toastui-editor-contents h1,
         .toastui-editor-dark .toastui-editor-contents h2,
         .toastui-editor-dark .toastui-editor-contents h3,
         .toastui-editor-dark .toastui-editor-contents h4,
         .toastui-editor-dark .toastui-editor-contents h5,
-        .toastui-editor-dark .toastui-editor-contents h6 {
-            color: #f7fafc;
-        }
+        .toastui-editor-dark .toastui-editor-contents h6 { color: #f7fafc !important; }
         </style>
     </head>
-    <body class="bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
-        <div class="max-w-5xl mx-auto p-6">
-            <!-- Header -->
-            <div class="flex justify-between items-center mb-4">
+    <body class="bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100 flex flex-col h-screen overflow-hidden">
+
+        <header class="flex justify-between items-center p-2 border-b border-gray-200 dark:border-gray-700 shadow-md relative z-50">
+            <div class="flex items-center gap-4">
+                <button id="toggle-files-btn" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Toggle File Explorer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+                </button>
                 <div>
-                    <h1 class="text-3xl font-bold">Sanderson Novel Template Editor</h1>
-                    <h2 id="author-name" class="text-xl text-gray-600 dark:text-gray-400">by Your Name</h2>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button id="theme-toggle-btn" class="px-3 py-1 bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-600">Toggle Theme</button>
-                    <button id="fullscreen-btn" class="px-3 py-1 bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-600">Fullscreen Edit</button>
+                    <h1 class="text-xl font-bold">Sanderson Novel Template Editor</h1>
+                    <h2 id="author-name" class="text-sm text-gray-600 dark:text-gray-400">by Your Name</h2>
                 </div>
             </div>
+            <div class="flex items-center gap-3">
+                <button id="fullscreen-btn" class="px-3 py-1 bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-600 text-sm">Fullscreen</button>
+                <button id="theme-toggle-btn" class="px-3 py-1 bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-600 text-sm">Toggle Theme</button>
+                <button id="toggle-git-btn" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Toggle Git Controls">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                </button>
+            </div>
+        </header>
 
-            <!-- Selectors -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div class="flex flex-1 overflow-hidden">
+            <aside id="files-sidebar" class="fixed top-0 left-0 h-screen w-full pt-16 xl:pt-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm xl:w-64 xl:relative xl:bg-white xl:dark:bg-gray-800 xl:backdrop-blur-none border-r border-gray-200 dark:border-gray-700 flex-col p-4 space-y-4 transform transition-transform duration-300 ease-in-out z-40 flex -translate-x-full">
+                <h3 class="text-lg font-semibold mt-2">File Explorer</h3>
                 <div>
-                    <label for="plan-selector" class="block text-lg font-medium mb-2">Plan Files:</label>
-                    <select id="plan-selector" class="w-full p-2 border rounded bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100">
-                        <option value="" disabled selected>Select a plan…</option>
-                    </select>
+                    <label for="plan-selector" class="block text-md font-medium mb-1">Plan Files:</label>
+                    <select id="plan-selector" class="w-full p-2 border rounded bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"></select>
+                    <button id="create-plan-btn" class="mt-2 w-full px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">+ New Plan File</button>
                 </div>
                 <div>
-                    <label for="chapter-selector" class="block text-lg font-medium mb-2">Chapter Files:</label>
-                    <select id="chapter-selector" class="w-full p-2 border rounded bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100">
-                        <option value="" disabled selected>Select a chapter…</option>
-                    </select>
+                    <label for="chapter-selector" class="block text-md font-medium mb-1">Chapter Files:</label>
+                    <select id="chapter-selector" class="w-full p-2 border rounded bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"></select>
+                    <button id="create-chapter-btn" class="mt-2 w-full px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">+ New Chapter</button>
                 </div>
-            </div>
+            </aside>
 
-            <!-- File actions -->
-            <div class="mb-4 flex gap-2">
-                <button id="create-plan-btn" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">+ New Plan File</button>
-                <button id="create-chapter-btn" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">+ New Chapter</button>
-                <button id="stageAll-btn" class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">Stage All</button>
-            </div>
+            <main id="main-content" class="flex-1 flex flex-col p-4 bg-gray-100 dark:bg-gray-900 transition-all duration-300 ease-in-out">
+                <div id="editor-wrapper" class="hidden flex-1 flex flex-col">
+                    <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
+                        <h3 id="file-header" class="text-xl font-semibold"></h3>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <button id="stage-file-btn" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm">Stage File</button>
+                            <button id="unstage-file-btn" class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm">Unstage File</button>
+                            <button id="save-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">💾 Save</button>
+                            <button id="delete-btn" class="px-4 py-2 bg-red-700 hover:bg-red-800 text-white rounded text-sm">🗑️ Delete</button>
+                        </div>
+                    </div>
+                    <div id="editor-container" class="flex-1 rounded shadow-lg min-h-[60vh]">
+                        <div id="editor"></div>
+                    </div>
+                </div>
+                <div id="welcome-message" class="text-center text-gray-500 dark:text-gray-400 my-auto">
+                    <h2 class="text-2xl">Welcome!</h2>
+                    <p>Select a file from the explorer on the left to begin editing.</p>
+                </div>
+            </main>
 
-            <!-- Editor and Git controls -->
-            <h3 id="file-header" class="text-xl font-semibold mb-4 hidden"></h3>
-            <div id="file-git-controls" class="mb-4 flex gap-2 hidden">
-                <button id="stage-file-btn" class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">Stage File</button>
-                <button id="unstage-file-btn" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">Unstage File</button>
-            </div>
-            <div id="editor-container" class="hidden">
-                <div id="editor" class="bg-white dark:bg-gray-800 rounded shadow mb-4"></div>
-            </div>
-
-            <!-- Git toolbar -->
-            <div class="flex flex-wrap gap-2 my-4">
-                <button id="git-status-btn" class="px-3 py-1 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 rounded">Git Status</button>
-                <button id="git-log-btn" class="px-3 py-1 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 rounded">Git Log</button>
-                <button id="git-diff-btn" class="px-3 py-1 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 rounded">Git Diff</button>
-                <button id="commit-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">Commit</button>
-                <button id="push-btn" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded">Push</button>
-                <button id="pull-btn" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded">Pull</button>
-                <button id="save-btn" class="px-4 py-2 bg-gray-700 dark:bg-gray-600 hover:bg-black dark:hover:bg-gray-800 text-white rounded">Save</button>
-                <button id="delete-btn" class="px-4 py-2 bg-red-700 hover:bg-red-800 text-white rounded">Delete</button>
-            </div>
-
-            <!-- Commit message -->
-            <textarea id="commit-msg" class="px-3 py-2 border rounded w-full mb-4 bg-white dark:bg-gray-800 dark:border-gray-600 dark=text-gray-100" placeholder="Commit message"></textarea>
-
-            <!-- Git output -->
-            <div id="git-output" class="bg-white dark:bg-gray-800 rounded shadow p-4 text-sm hidden">
-                <h2 class="text-lg font-semibold mb-2">Git Output</h2>
-                <div id="git-output-content" class="whitespace-pre-wrap font-mono text-sm"></div>
-            </div>
+            <aside id="git-sidebar" class="fixed top-0 right-0 h-screen w-full pt-16 xl:pt-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm xl:w-80 xl:relative xl:bg-white xl:dark:bg-gray-800 xl:backdrop-blur-none border-l border-gray-200 dark:border-gray-700 flex-col p-4 space-y-4 transform transition-transform duration-300 ease-in-out z-40 flex translate-x-full">
+                <h3 class="text-lg font-semibold mt-2">Version Control</h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="git-status-btn" class="px-3 py-1 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 rounded">Status</button>
+                    <button id="git-log-btn" class="px-3 py-1 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 rounded">Log</button>
+                    <button id="git-diff-btn" class="px-3 py-1 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 rounded">Diff</button>
+                    <button id="stageAll-btn" class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">Stage All</button>
+                </div>
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <textarea id="commit-msg" class="px-3 py-2 border rounded w-full bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100" placeholder="Commit message..." rows="3"></textarea>
+                    <button id="commit-btn" class="mt-2 w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">Commit</button>
+                </div>
+                <div class="flex gap-2">
+                    <button id="push-btn" class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded">Push</button>
+                    <button id="pull-btn" class="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded">Pull</button>
+                </div>
+                <div id="git-output" class="flex-1 bg-gray-200 dark:bg-gray-900 rounded shadow-inner p-2 text-sm overflow-y-auto custom-scrollbar">
+                    <h2 class="text-md font-semibold mb-2 sticky top-0 bg-gray-200 dark:bg-gray-900">Git Output</h2>
+                    <div id="git-output-content" class="whitespace-pre-wrap font-mono text-xs"></div>
+                </div>
+            </aside>
         </div>
 
-        <!-- Toast UI Editor full bundle -->
         <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
         <script>
-        // Helpers for cookies and fullscreen
         function setCookie(name, value, days = 365) {
             const expires = new Date(Date.now() + days * 864e5).toUTCString();
             document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
@@ -133,21 +154,43 @@
             htmlEl.classList.toggle('toastui-editor-dark', mode === 'dark');
             themeBtn.textContent = mode === 'dark' ? 'Light Mode' : 'Dark Mode';
 
-            const defaultHeight = '600px';
-            const editorContainer = document.getElementById('editor-container');
+            let currentDir = null;
+            let currentFile = null;
 
-            // Editor setup
-            const { Editor } = toastui;
-            let editor = new Editor({
-                el: document.getElementById('editor'),
-                initialEditType: 'wysiwyg',
-                previewStyle: 'vertical',
-                height: defaultHeight,
-                initialValue: '',
-                theme: mode
+            const defaultHeight = '100%';
+
+            const filesSidebar = document.getElementById('files-sidebar');
+            const gitSidebar = document.getElementById('git-sidebar');
+
+            document.getElementById('toggle-files-btn').addEventListener('click', () => {
+                filesSidebar.classList.toggle('-translate-x-full');
+            });
+            document.getElementById('toggle-git-btn').addEventListener('click', () => {
+                gitSidebar.classList.toggle('translate-x-full');
             });
 
-            // Theme toggle
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    if (!filesSidebar.classList.contains('-translate-x-full')) {
+                        filesSidebar.classList.add('-translate-x-full');
+                    }
+                    if (!gitSidebar.classList.contains('translate-x-full')) {
+                        gitSidebar.classList.add('translate-x-full');
+                    }
+                }
+            });
+
+            const closeFilesSidebarIfNeeded = () => {
+                if (window.innerWidth < 1280 && !filesSidebar.classList.contains('-translate-x-full')) {
+                    filesSidebar.classList.add('-translate-x-full');
+                }
+            };
+
+            const { Editor } = toastui;
+            let editor = new Editor({
+                el: document.getElementById('editor'), initialEditType: 'wysiwyg', previewStyle: 'vertical', height: defaultHeight, initialValue: '', theme: mode
+            });
+
             themeBtn.addEventListener('click', () => {
                 mode = htmlEl.classList.toggle('dark') ? 'dark' : 'light';
                 htmlEl.classList.toggle('toastui-editor-dark', mode === 'dark');
@@ -156,31 +199,19 @@
                 const content = editor.getMarkdown();
                 editor.destroy();
                 editor = new Editor({
-                    el: document.getElementById('editor'),
-                    initialEditType: 'wysiwyg',
-                    previewStyle: 'vertical',
-                    height: defaultHeight,
-                    initialValue: content,
-                    theme: mode
+                    el: document.getElementById('editor'), initialEditType: 'wysiwyg', previewStyle: 'vertical', height: defaultHeight, initialValue: content, theme: mode
                 });
             });
 
-            // Fullscreen toggle and listener
             document.getElementById('fullscreen-btn').addEventListener('click', () => {
                 if (!document.fullscreenElement) {
-                    editorContainer.requestFullscreen();
-                } else {
-                    document.exitFullscreen();
-                }
+                    document.querySelector('body').requestFullscreen();
+                } else { document.exitFullscreen(); }
             });
             document.addEventListener('fullscreenchange', () => {
-                if (document.fullscreenElement) {
-                    editor.setHeight('100vh');
-                } else {
-                    editor.setHeight(defaultHeight);
-                }
+                editor.setHeight(document.fullscreenElement ? '100vh' : defaultHeight);
             });
-            // Load and bind tabs
+
             async function loadTabs() {
                 try {
                     const res = await fetch('/files');
@@ -191,31 +222,44 @@
                     chapSel.innerHTML = '<option value="" disabled selected>Select a chapter…</option>';
                     plan.forEach(f => planSel.appendChild(new Option(f.replace('.md',''), f)));
                     chapters.forEach(f => chapSel.appendChild(new Option(f.replace('.md',''), f)));
-                    document.getElementById('file-header').classList.add('hidden');
-                    document.getElementById('file-git-controls').classList.add('hidden');
-                    document.getElementById('editor-container').classList.add('hidden');
+
+                    document.getElementById('editor-wrapper').classList.add('hidden');
+                    document.getElementById('welcome-message').classList.remove('hidden');
+
                 } catch (e) { console.error(e); }
             }
 
             async function loadFileContent(dir, file) {
-                const header = document.getElementById('file-header');
-                header.textContent = file;
-                header.classList.remove('hidden');
-                document.getElementById('file-git-controls').classList.remove('hidden');
-                document.getElementById('editor-container').classList.remove('hidden');
+                currentDir = dir; currentFile = file;
+                document.getElementById('file-header').textContent = file;
+
+                document.getElementById('welcome-message').classList.add('hidden');
+                document.getElementById('editor-wrapper').classList.remove('hidden');
+                document.getElementById('editor-wrapper').classList.add('flex', 'flex-col');
+
                 const text = await (await fetch(`/files/${dir}/${file}`)).text();
                 editor.setMarkdown(text);
-                currentDir = dir; currentFile = file;
+                editor.moveCursorToStart();
             }
 
-            document.getElementById('plan-selector').addEventListener('change', e => loadFileContent('plan', e.target.value));
-            document.getElementById('chapter-selector').addEventListener('change', e => loadFileContent('chapters', e.target.value));
+            document.getElementById('plan-selector').addEventListener('change', e => {
+                document.getElementById('chapter-selector').value = '';
+                loadFileContent('plan', e.target.value);
+                closeFilesSidebarIfNeeded();
+            });
+            document.getElementById('chapter-selector').addEventListener('change', e => {
+                document.getElementById('plan-selector').value = '';
+                loadFileContent('chapters', e.target.value);
+                closeFilesSidebarIfNeeded();
+            });
 
             document.getElementById('stage-file-btn').addEventListener('click', async () => {
+                if (!currentFile) return;
                 await fetch(`/git/add?filename=${currentDir}/${currentFile}`, { method: 'POST' });
                 showOutput(`✅ Staged ${currentFile}`);
             });
             document.getElementById('unstage-file-btn').addEventListener('click', async () => {
+                if (!currentFile) return;
                 await fetch(`/git/reset?filename=${currentDir}/${currentFile}`, { method: 'POST' });
                 showOutput(`🚫 Unstaged ${currentFile}`);
             });
@@ -223,111 +267,87 @@
             document.getElementById('create-plan-btn').addEventListener('click', () => createFile('plan'));
             document.getElementById('create-chapter-btn').addEventListener('click', () => createFile('chapters'));
             async function createFile(sec) {
-                const name = prompt('Filename without .md:'); if (!name) return;
-                const r = await fetch(`/files/${sec}/${name}.md`, { method: 'POST' });
-                if (r.ok) { loadTabs(); showOutput(`✅ Created ${name}.md`); } else { const j = await r.json(); showOutput(`❌ ${j.error}`); }
+                const name = prompt('Enter new filename (without .md extension):');
+                if (!name) return;
+
+                const filename = `${name}.md`;
+                const r = await fetch(`/files/${sec}/${filename}`, { method: 'POST' });
+
+                if (r.ok) {
+                    showOutput(`✅ Created ${filename}`, false, true); // Suppress auto-open
+                    await loadTabs();
+
+                    if (sec === 'plan') {
+                        document.getElementById('plan-selector').value = filename;
+                        document.getElementById('chapter-selector').value = '';
+                    } else {
+                        document.getElementById('chapter-selector').value = filename;
+                        document.getElementById('plan-selector').value = '';
+                    }
+
+                    loadFileContent(sec, filename);
+                    closeFilesSidebarIfNeeded();
+                } else {
+                    const j = await r.json();
+                    showOutput(`❌ ${j.error}`, false, true); // Suppress auto-open
+                }
             }
 
-            document.getElementById('stageAll-btn').addEventListener('click', async () => { await fetch('/git/add', { method: 'POST' }); showOutput('✅ Staged all'); });
             document.getElementById('save-btn').addEventListener('click', async () => {
-                if (!currentFile) return alert('Select a file');
+                if (!currentFile) return alert('No file selected to save.');
                 const c = editor.getMarkdown();
                 await fetch(`/files/${currentDir}/${currentFile}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: c }) });
-                alert('Saved');
+                alert(`${currentFile} saved successfully!`);
             });
             document.getElementById('delete-btn').addEventListener('click', async () => {
-                if (!currentFile) return alert('Select a file');
-                if (confirm(`Delete ${currentFile}?`)) { await fetch(`/files/${currentDir}/${currentFile}`, { method: 'DELETE' }); loadTabs(); }
+                if (!currentFile) return alert('No file selected to delete.');
+                if (confirm(`Are you sure you want to permanently delete ${currentFile}?`)) { 
+                    await fetch(`/files/${currentDir}/${currentFile}`, { method: 'DELETE' }); 
+                    await loadTabs(); 
+                }
             });
+
+            document.getElementById('stageAll-btn').addEventListener('click', async () => { await fetch('/git/add', { method: 'POST' }); showOutput('✅ Staged all changed files.'); });
             document.getElementById('git-status-btn').addEventListener('click', async () => {
-                const { staged, unstaged, untracked } = 
-                    await (await fetch('/git/status')).json();
-
-                const html = `
-<div class="flex flex-col space-y-0">
-<div>
-<strong>Changes to be committed:</strong>
-<div class="ml-4 space-y-0 text-green-500 font-mono">
-${
-staged.length
-? staged.map(f => `<div>${f}</div>`).join('')
-: '<div><em>none</em></div>'
-}
-</div>
-</div>
-<div>
-<strong>Changes not staged for commit:</strong>
-<div class="ml-4 space-y-0 text-yellow-500 font-mono">
-${
-unstaged.length
-? unstaged.map(f => `<div>${f}</div>`).join('')
-: '<div><em>none</em></div>'
-}
-</div>
-</div>
-<div>
-<strong>Untracked files:</strong>
-<div class="ml-4 space-y-0 text-red-500 font-mono">
-${
-untracked.length
-? untracked.map(f => `<div>${f}</div>`).join('')
-: '<div><em>none</em></div>'
-}
-</div>
-</div>
-</div>
-`;
-
-                const box     = document.getElementById('git-output');
-                const content = document.getElementById('git-output-content');
-                content.innerHTML = html;
-                box.classList.remove('hidden');
+                const { staged, unstaged, untracked } = await (await fetch('/git/status')).json();
+                const html = `<div class="flex flex-col space-y-2"><div><strong>To be committed:</strong><div class="ml-2 text-green-600 dark:text-green-400">${staged.length ? staged.map(f => `<div>${f}</div>`).join('') : '<em>none</em>'}</div></div><div><strong>Not staged:</strong><div class="ml-2 text-yellow-600 dark:text-yellow-400">${unstaged.length ? unstaged.map(f => `<div>${f}</div>`).join('') : '<em>none</em>'}</div></div><div><strong>Untracked:</strong><div class="ml-2 text-red-600 dark:text-red-400">${untracked.length ? untracked.map(f => `<div>${f}</div>`).join('') : '<em>none</em>'}</div></div></div>`;
+                showOutput(html, true);
             });
-
             document.getElementById('git-log-btn').addEventListener('click', async () => {
                 const logs = await (await fetch('/git/log')).json();
-
-                const html = `
-<div class="flex flex-col space-y-1">
-${logs.map(c => `
-<div class="flex items-baseline gap-2">
-<span class="text-green-400 font-mono">${c.hexsha}</span>
-<span class="flex-1">${c.message}</span>
-</div>
-`).join('')}
-</div>
-`;
-
-                const box     = document.getElementById('git-output');
-                const content = document.getElementById('git-output-content');
-                content.innerHTML = html;
-                box.classList.remove('hidden');
+                const html = `<div class="flex flex-col space-y-1">${logs.map(c => `<div class="flex items-baseline gap-2"><span class="text-green-500">${c.hexsha}</span><span class="flex-1">${c.message}</span></div>`).join('')}</div>`;
+                showOutput(html, true);
             });
             document.getElementById('git-diff-btn').addEventListener('click', async () => {
                 const { diff } = await (await fetch('/git/diff')).json();
                 const html = diff.split('\n').map(l => {
                     const e = l.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    if (l.startsWith('+') && !l.startsWith('+++')) return `<div class=\"bg-green-100 dark:bg-gray-800 text-green-800 dark:text-green-400 font-mono whitespace-pre-wrap\">${e}</div>`;
-                    if (l.startsWith('-') && !l.startsWith('---')) return `<div class=\"bg-red-100 dark:bg-gray-800 text-red-800 dark:text-red-400 font-mono whitespace-pre-wrap\">${e}</div>`;
-                    return `<div class=\"font-mono whitespace-pre-wrap\">${e}</div>`;
+                    if (l.startsWith('+') && !l.startsWith('+++')) return `<div class="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">${e}</div>`;
+                    if (l.startsWith('-') && !l.startsWith('---')) return `<div class="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400">${e}</div>`;
+                    return `<div>${e}</div>`;
                 }).join('');
-                const box = document.getElementById('git-output');
-                document.getElementById('git-output-content').innerHTML = html;
-                box.classList.remove('hidden');
+                showOutput(html, true);
             });
-
             document.getElementById('commit-btn').addEventListener('click', async () => {
-                const m = document.getElementById('commit-msg').value.trim(); if (!m) return alert('Enter commit msg');
+                const msgEl = document.getElementById('commit-msg');
+                const m = msgEl.value.trim(); if (!m) return alert('Commit message cannot be empty.');
                 const d = await (await fetch('/git/commit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(m) })).json();
-                showOutput(`Committed: ${d.message}`);
+                showOutput(`✅ Committed: ${d.message}`);
+                msgEl.value = '';
             });
-            document.getElementById('push-btn').addEventListener('click', async () => { await fetch('/git/push', { method: 'POST' }); showOutput('Pushed'); });
-            document.getElementById('pull-btn').addEventListener('click', async () => { await fetch('/git/pull', { method: 'POST' }); showOutput('Pulled'); });
+            document.getElementById('push-btn').addEventListener('click', async () => { await fetch('/git/push', { method: 'POST' }); showOutput('🚀 Pushed to remote.'); });
+            document.getElementById('pull-btn').addEventListener('click', async () => { await fetch('/git/pull', { method: 'POST' }); showOutput('📥 Pulled from remote.'); });
 
-            function showOutput(t) {
-                const box = document.getElementById('git-output');
-                document.getElementById('git-output-content').textContent = t;
-                box.classList.remove('hidden');
+            function showOutput(text, isHtml = false, suppressAutoOpen = false) {
+                const outputContent = document.getElementById('git-output-content');
+                if (isHtml) {
+                    outputContent.innerHTML = text;
+                } else {
+                    outputContent.textContent = text;
+                }
+                if (!suppressAutoOpen && gitSidebar.classList.contains('translate-x-full')) {
+                    document.getElementById('toggle-git-btn').click();
+                }
             }
 
             loadTabs();
@@ -335,4 +355,3 @@ ${logs.map(c => `
         </script>
     </body>
 </html>
-
