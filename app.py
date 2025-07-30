@@ -90,15 +90,21 @@ def delete_file(section: str, filename: str):
         logger.error(f"Error deleting file {filename}: {e}")
         return JSONResponse(status_code=500, content={"error": "Internal Server Error"})
 
+# in app.py
+
 @app.get("/git/status")
 def git_status():
-    try:
-        changed = [item.a_path for item in REPO.index.diff(None)]
-        untracked = REPO.untracked_files
-        return {"changed": changed, "untracked": untracked}
-    except Exception as e:
-        logger.error(f"Git status error: {e}")
-        return JSONResponse(status_code=500, content={"error": "Internal Server Error"})
+    # staged = changes in the index (what’s about to be committed)
+    staged   = [item.a_path for item in REPO.index.diff('HEAD')]
+    # unstaged = changes in the working dir not yet added
+    unstaged = [item.a_path for item in REPO.index.diff(None)]
+    # untracked = brand new files
+    untracked = REPO.untracked_files
+    return {
+      "staged":   sorted(staged),
+      "unstaged": sorted(unstaged),
+      "untracked": sorted(untracked),
+    }
 
 @app.post("/git/commit")
 def git_commit(message: str = Body(...)):
