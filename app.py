@@ -62,20 +62,74 @@ def save_file(section: str, filename: str, data: FileUpdate):
         logger.error(f"Error saving file {filename}: {e}")
         return JSONResponse(status_code=500, content={"error": "Internal Server Error"})
 
+from textwrap import dedent
+
 @app.post("/files/{section}/{filename}")
 def create_file(section: str, filename: str):
+    """
+    Create a new file in either the plan directory or the chapters directory.
+    If it's a chapter, seed the new .md file with a chapter-specific template.
+    """
     try:
         dir_path = PLAN_DIR if section == "plan" else CHAPTERS_DIR
         dir_path.mkdir(parents=True, exist_ok=True)
         file_path = dir_path / filename
+
         if file_path.exists():
             logger.warning(f"Tried to create existing file: {file_path}")
             return JSONResponse(status_code=400, content={"error": "File already exists"})
-        file_path.write_text("", encoding="utf-8")
+
+        content = ""
+
+        if section != "plan":
+            # Nicely format the title
+            raw_title = filename.rsplit(".", 1)[0]
+            nice_title = raw_title.replace("_", " ").title()
+
+            content = dedent(f"""\
+            # {nice_title}
+
+            ### 1. Chapter Overview
+            - **Goal/Purpose of this chapter:**  
+            - **Emotional tone:**  
+
+            ### 2. Setting & Atmosphere
+            - **Location(s):**  
+            - **Time of day / Date:**  
+            - **Mood / Sensory details:**  
+
+            ### 3. Characters & Roles
+            - **Who appears here:**  
+            - **Each character’s objective in this chapter:**  
+
+            ### 4. Scene Breakdown
+            - [ ] Scene 1: _what happens_  
+            - [ ] Scene 2: _what happens_  
+            - [ ] …  
+
+            ### 5. Conflict & Stakes
+            - **Immediate conflict:**  
+            - **What’s at risk for the POV character(s):**  
+
+            ### 6. Chapter-Specific Hooks
+            - **Cliffhanger or question to carry forward:**  
+
+            ### 7. Notes / To-Do
+            - **Continuity checks (dates, names, previous events):** 
+            - **Research or worldbuilding details needed:**  
+
+            ---
+
+            *Delete this starter text and begin writing your chapter!*  
+            """).strip()
+
+        file_path.write_text(content, encoding="utf-8")
         return {"status": "created"}
+
     except Exception as e:
         logger.error(f"Error creating file {filename} in {section}: {e}")
         return JSONResponse(status_code=500, content={"error": "Internal Server Error"})
+
 
 @app.delete("/files/{section}/{filename}")
 def delete_file(section: str, filename: str):
@@ -90,20 +144,15 @@ def delete_file(section: str, filename: str):
         logger.error(f"Error deleting file {filename}: {e}")
         return JSONResponse(status_code=500, content={"error": "Internal Server Error"})
 
-# in app.py
-
 @app.get("/git/status")
 def git_status():
-    # staged = changes in the index (what’s about to be committed)
     staged   = [item.a_path for item in REPO.index.diff('HEAD')]
-    # unstaged = changes in the working dir not yet added
     unstaged = [item.a_path for item in REPO.index.diff(None)]
-    # untracked = brand new files
     untracked = REPO.untracked_files
     return {
-      "staged":   sorted(staged),
-      "unstaged": sorted(unstaged),
-      "untracked": sorted(untracked),
+        "staged":   sorted(staged),
+        "unstaged": sorted(unstaged),
+        "untracked": sorted(untracked),
     }
 
 @app.post("/git/commit")
