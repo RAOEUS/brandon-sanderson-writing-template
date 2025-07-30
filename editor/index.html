@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sanderson Novel Template Editor</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css">
+</head>
+<body class="bg-gray-100 text-gray-900">
+  <div class="max-w-5xl mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-4">Sanderson Novel Template Editor</h1>
+
+    <div class="flex flex-wrap justify-between items-center mb-4">
+      <div id="tabs" class="flex flex-wrap gap-2 text-sm"></div>
+      <div class="flex gap-2">
+        <button id="git-status-btn" class="px-3 py-1 bg-gray-300 hover:bg-gray-400 rounded">Git Status</button>
+        <button id="git-log-btn" class="px-3 py-1 bg-gray-300 hover:bg-gray-400 rounded">Git Log</button>
+      </div>
+    </div>
+
+    <div id="editor" class="bg-white rounded shadow mb-4"></div>
+
+    <div class="flex flex-col md:flex-row items-start md:items-center gap-2 mb-4">
+      <input id="commit-msg" class="flex-1 px-3 py-2 border rounded w-full md:w-auto" type="text" placeholder="Commit message">
+      <button id="commit-btn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Commit</button>
+      <button id="push-btn" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Push</button>
+      <button id="pull-btn" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">Pull</button>
+      <button id="save-btn" class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-black">Save</button>
+    </div>
+
+    <div id="git-output" class="bg-white rounded shadow p-4 text-sm whitespace-pre-wrap hidden"></div>
+  </div>
+
+  <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+  <script>
+    let currentFile = "";
+    const editor = new toastui.Editor({
+      el: document.querySelector('#editor'),
+      height: '600px',
+      initialEditType: 'wysiwyg',
+      previewStyle: 'vertical'
+    });
+
+    async function loadFiles() {
+      const res = await fetch("/files");
+      let files = await res.json();
+      files = files.sort();
+      const tabsContainer = document.getElementById("tabs");
+      tabsContainer.innerHTML = "";
+
+      files.forEach((filename, idx) => {
+        const tab = document.createElement("button");
+        tab.className = "tab bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded border border-gray-400";
+        tab.innerText = filename.replace(".md", "");
+        tab.onclick = () => {
+          document.querySelectorAll(".tab").forEach(t => t.classList.remove("bg-blue-500", "text-white"));
+          tab.classList.add("bg-blue-500", "text-white");
+          loadFileContent(filename);
+          currentFile = filename;
+        };
+        if (idx === 0) {
+          tab.classList.add("bg-blue-500", "text-white");
+          currentFile = filename;
+          loadFileContent(filename);
+        }
+        tabsContainer.appendChild(tab);
+      });
+    }
+
+    async function loadFileContent(filename) {
+      const res = await fetch(`/files/${filename}`);
+      const text = await res.text();
+      editor.setMarkdown(text);
+    }
+
+    document.getElementById("save-btn").onclick = async () => {
+      if (!currentFile) return alert("No file selected.");
+      const content = editor.getMarkdown();
+      const res = await fetch(`/files/${currentFile}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content })
+      });
+      if (res.ok) {
+        alert("Saved successfully!");
+      } else {
+        alert("Failed to save.");
+      }
+    };
+
+    document.getElementById("commit-btn").onclick = async () => {
+      const msg = document.getElementById("commit-msg").value.trim();
+      if (!msg) return alert("Please enter a commit message.");
+      const res = await fetch("/git/commit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(msg)
+      });
+      const out = await res.json();
+      showOutput("✅ Commit: " + out.message);
+    };
+
+    document.getElementById("push-btn").onclick = async () => {
+      const res = await fetch("/git/push", { method: "POST" });
+      const out = await res.json();
+      showOutput("⬆️ Push: " + out.status);
+    };
+
+    document.getElementById("pull-btn").onclick = async () => {
+      const res = await fetch("/git/pull", { method: "POST" });
+      const out = await res.json();
+      showOutput("🔄 Pull: " + out.status);
+    };
+
+    document.getElementById("git-status-btn").onclick = async () => {
+      const res = await fetch("/git/status");
+      const out = await res.json();
+      showOutput("📝 Git Status:\nChanged: " + out.changed.join(", ") + "\nUntracked: " + out.untracked.join(", "));
+    };
+
+    document.getElementById("git-log-btn").onclick = async () => {
+      const res = await fetch("/git/log");
+      const out = await res.json();
+      const log = out.map(c => `• ${c.hexsha}: ${c.message}`).join("\n");
+      showOutput("📜 Git Log:\n" + log);
+    };
+
+    function showOutput(msg) {
+      const box = document.getElementById("git-output");
+      box.textContent = msg;
+      box.classList.remove("hidden");
+    }
+
+    loadFiles();
+  </script>
+</body>
+</html>
