@@ -120,8 +120,10 @@ def git_commit(message: str = Body(...)):
 def git_push():
     try:
         origin = REPO.remote(name="origin")
-        origin.push()
-        return {"status": "pushed"}
+        branch = REPO.active_branch.name
+        # push only the current branch to its upstream
+        origin.push(f"{branch}:{branch}")
+        return {"status": "pushed", "branch": branch}
     except Exception as e:
         logger.error(f"Git push error: {e}")
         return JSONResponse(status_code=500, content={"error": "Internal Server Error"})
