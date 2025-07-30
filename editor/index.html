@@ -18,18 +18,14 @@
         .toastui-editor-dark .toastui-editor-mode-switch .tab-item,
         .toastui-editor-dark .toastui-editor-toolbar button,
         .toastui-editor-dark .ProseMirror {
-            /* Tailwind gray-900 */
             background-color: #1a202c;
-            /* Tailwind gray-100 */
             color: #f7fafc;
         }
         .toastui-editor-dark .toastui-editor-toolbar,
         .toastui-editor-dark .toastui-editor-defaultUI-toolbar,
         .toastui-editor-dark .toastui-editor-dropdown-toolbar,
         .toastui-editor-dark .toastui-editor-mode-switch .tab-item.active {
-            /* Tailwind gray-800 */
             background-color: #2d3748;
-            /* Tailwind gray-100 */
             color: #f7fafc;
         }
         .toastui-editor-dark .toastui-editor-toolbar-icons:not(:disabled):hover{
@@ -37,7 +33,6 @@
             border: solid 1px #f7fafc;
         }
         .toastui-editor-dark .toastui-editor-separator {
-            /* Tailwind gray-700 */
             border-color: #4a5568;
         }
         .toastui-editor-dark .toastui-editor-contents h1,
@@ -46,7 +41,6 @@
         .toastui-editor-dark .toastui-editor-contents h4,
         .toastui-editor-dark .toastui-editor-contents h5,
         .toastui-editor-dark .toastui-editor-contents h6 {
-            /* Tailwind gray-100 */
             color: #f7fafc;
         }
         </style>
@@ -86,6 +80,11 @@
             </div>
 
             <h3 id="file-header" class="text-xl font-semibold mb-4 hidden"></h3>
+            <!-- Individual stage/unstage controls -->
+            <div id="file-git-controls" class="mb-4 flex gap-2 hidden">
+                <button id="stage-file-btn" class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">Stage File</button>
+                <button id="unstage-file-btn" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">Unstage File</button>
+            </div>
             <div id="editor-container" class="hidden">
                 <div id="editor" class="bg-white dark:bg-gray-800 rounded shadow mb-4"></div>
             </div>
@@ -145,7 +144,8 @@
                 previewStyle: 'vertical',
                 height: '600px',
                 initialValue: '',
-                theme: mode
+                theme: mode,
+                initialEditType: 'wysiwyg'
             });
 
             // Toggle theme on the fly (recreate editor)
@@ -162,21 +162,20 @@
                     previewStyle: 'vertical',
                     height: document.fullscreenElement ? '100vh' : '600px',
                     initialValue: content,
-                    theme: mode
+                    theme: mode,
+                    initialEditType: 'wysiwyg'
                 });
             });
             document.getElementById('fullscreen-btn').addEventListener('click', () => {
                 toggleFullscreen();
-                // adjust height after fullscreen change
-                setTimeout(() => {
-                    editor.setHeight(document.fullscreenElement ? '100vh' : '600px');
-                }, 300);
+                setTimeout(() => { editor.setHeight(document.fullscreenElement ? '100vh' : '600px'); }, 300);
             });
 
             let currentDir = '', currentFile = '';
             const planSel = document.getElementById('plan-selector');
             const chapSel = document.getElementById('chapter-selector');
             const fileHeader = document.getElementById('file-header');
+            const fileGitControls = document.getElementById('file-git-controls');
             const editorCont = document.getElementById('editor-container');
 
             async function loadTabs() {
@@ -187,19 +186,28 @@
                     chapSel.innerHTML = '<option value="" disabled selected>Select a chapter…</option>';
                     plan.forEach(f => { const o = document.createElement('option'); o.value = f; o.textContent = f.replace('.md',''); planSel.append(o); });
                     chapters.forEach(f => { const o = document.createElement('option'); o.value = f; o.textContent = f.replace('.md',''); chapSel.append(o); });
-                    fileHeader.classList.add('hidden'); editorCont.classList.add('hidden');
+                    fileHeader.classList.add('hidden'); fileGitControls.classList.add('hidden'); editorCont.classList.add('hidden');
                 } catch(e){ console.error(e);}      }
 
             async function loadFileContent(dir, file) {
                 currentDir = dir; currentFile = file;
                 fileHeader.textContent = file; fileHeader.classList.remove('hidden');
-                editorCont.classList.remove('hidden');
+                fileGitControls.classList.remove('hidden'); editorCont.classList.remove('hidden');
                 const txt = await (await fetch(`/files/${dir}/${file}`)).text();
                 editor.setMarkdown(txt);
             }
 
             planSel.addEventListener('change', e => loadFileContent('plan', e.target.value));
             chapSel.addEventListener('change', e => loadFileContent('chapters', e.target.value));
+
+            document.getElementById('stage-file-btn').addEventListener('click', async () => {
+                await fetch(`/git/add?filename=${currentDir}/${currentFile}`, { method: 'POST' });
+                showOutput(`✅ Staged ${currentFile}`);
+            });
+            document.getElementById('unstage-file-btn').addEventListener('click', async () => {
+                await fetch(`/git/reset?filename=${currentDir}/${currentFile}`, { method: 'POST' });
+                showOutput(`🚫 Unstaged ${currentFile}`);
+            });
 
             document.getElementById('create-plan-btn').addEventListener('click', () => createFile('plan'));
             document.getElementById('create-chapter-btn').addEventListener('click', () => createFile('chapters'));
